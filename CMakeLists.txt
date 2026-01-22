@@ -99,6 +99,9 @@ endif()
 
 target_link_libraries(image-converters PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
+# Include source directory for custom widget headers
+target_include_directories(image-converters PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Link libheif if available
 if(LIBHEIF_FOUND)
     target_include_directories(image-converters PRIVATE ${LIBHEIF_INCLUDE_DIRS})
