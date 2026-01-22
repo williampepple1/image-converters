@@ -64,6 +64,8 @@ set(PROJECT_SOURCES
         heifhandler.h
         avifhandler.cpp
         avifhandler.h
+        icohandler.cpp
+        icohandler.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

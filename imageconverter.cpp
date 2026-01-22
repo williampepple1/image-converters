@@ -1,6 +1,7 @@
 #include "imageconverter.h"
 #include "heifhandler.h"
 #include "avifhandler.h"
+#include "icohandler.h"
 
 #include <QImage>
 #include <QFileInfo>
@@ -134,9 +135,16 @@ ConversionResult ImageConverter::convert(const QString& inputPath, const QString
                 return result;
             }
         case Format::ICO:
-            // ICO requires special handling - placeholder
-            result.errorMessage = "ICO output requires special handling (coming soon)";
-            return result;
+            {
+                // Use IcoHandler for ICO output with multiple sizes
+                QString icoError;
+                if (IcoHandler::write(result.outputFile, image, icoError)) {
+                    result.success = true;
+                } else {
+                    result.errorMessage = icoError;
+                }
+                return result;
+            }
     }
 
     // Save the image
@@ -213,7 +221,8 @@ bool ImageConverter::isFormatSupported(Format format)
             return AvifHandler::isAvailable() ||
                    supportedFormats.contains("avif");
         case Format::ICO:
-            return supportedFormats.contains("ico");
+            return IcoHandler::isAvailable() ||
+                   supportedFormats.contains("ico");
     }
     return false;
 }
