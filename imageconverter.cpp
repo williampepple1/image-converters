@@ -78,6 +78,8 @@ ConversionResult ImageConverter::convert(const QString& inputPath, const QString
             break;
         case Format::TIFF:
             formatStr = "TIFF";
+            // TIFF uses lossless compression by default
+            // Quality parameter is ignored for TIFF (always lossless)
             break;
         case Format::HEIC:
             // HEIC requires external plugin - placeholder
