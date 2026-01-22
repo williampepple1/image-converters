@@ -12,6 +12,27 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
+# Optional: Find libheif for HEIC/HEIF support
+find_package(PkgConfig QUIET)
+if(PkgConfig_FOUND)
+    pkg_check_modules(LIBHEIF QUIET libheif)
+endif()
+
+# Alternative: Try to find libheif directly
+if(NOT LIBHEIF_FOUND)
+    find_path(LIBHEIF_INCLUDE_DIRS NAMES libheif/heif.h)
+    find_library(LIBHEIF_LIBRARIES NAMES heif libheif)
+    if(LIBHEIF_INCLUDE_DIRS AND LIBHEIF_LIBRARIES)
+        set(LIBHEIF_FOUND TRUE)
+    endif()
+endif()
+
+if(LIBHEIF_FOUND)
+    message(STATUS "libheif found - HEIC/HEIF support enabled")
+else()
+    message(STATUS "libheif not found - HEIC/HEIF support disabled")
+endif()
+
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
@@ -19,6 +40,8 @@ set(PROJECT_SOURCES
         mainwindow.ui
         imageconverter.cpp
         imageconverter.h
+        heifhandler.cpp
+        heifhandler.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -45,6 +68,13 @@ else()
 endif()
 
 target_link_libraries(image-converters PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+
+# Link libheif if available
+if(LIBHEIF_FOUND)
+    target_include_directories(image-converters PRIVATE ${LIBHEIF_INCLUDE_DIRS})
+    target_link_libraries(image-converters PRIVATE ${LIBHEIF_LIBRARIES})
+    target_compile_definitions(image-converters PRIVATE HAVE_LIBHEIF)
+endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

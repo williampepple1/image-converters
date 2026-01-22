@@ -1,4 +1,5 @@
 #include "imageconverter.h"
+#include "heifhandler.h"
 
 #include <QImage>
 #include <QFileInfo>
@@ -27,7 +28,20 @@ ConversionResult ImageConverter::convert(const QString& inputPath, const QString
 
     // Load the image
     QImage image;
-    if (!image.load(inputPath)) {
+    QString inputSuffix = inputInfo.suffix().toLower();
+
+    // Check if input is HEIC/HEIF
+    if (inputSuffix == "heic" || inputSuffix == "heif") {
+        QString heifError;
+        if (!HeifHandler::read(inputPath, image, heifError)) {
+            // Try Qt's native loading as fallback (in case of Qt plugin)
+            if (!image.load(inputPath)) {
+                result.errorMessage = heifError.isEmpty() ?
+                    "Failed to load HEIC/HEIF image" : heifError;
+                return result;
+            }
+        }
+    } else if (!image.load(inputPath)) {
         result.errorMessage = "Failed to load image. Format may not be supported.";
         return result;
     }
@@ -82,9 +96,17 @@ ConversionResult ImageConverter::convert(const QString& inputPath, const QString
             // Quality parameter is ignored for TIFF (always lossless)
             break;
         case Format::HEIC:
-            // HEIC requires external plugin - placeholder
-            result.errorMessage = "HEIC output requires additional plugins (coming soon)";
-            return result;
+            {
+                // Use HeifHandler for HEIC output
+                int heicQuality = (saveQuality < 0) ? 90 : saveQuality;
+                QString heifError;
+                if (HeifHandler::write(result.outputFile, image, heicQuality, heifError)) {
+                    result.success = true;
+                } else {
+                    result.errorMessage = heifError;
+                }
+                return result;
+            }
         case Format::AVIF:
             // AVIF requires external plugin - placeholder
             result.errorMessage = "AVIF output requires additional plugins (coming soon)";
@@ -163,7 +185,8 @@ bool ImageConverter::isFormatSupported(Format format)
         case Format::BMP:
             return supportedFormats.contains("bmp");
         case Format::HEIC:
-            return supportedFormats.contains("heic") || supportedFormats.contains("heif");
+            return HeifHandler::isAvailable() ||
+                   supportedFormats.contains("heic") || supportedFormats.contains("heif");
         case Format::AVIF:
             return supportedFormats.contains("avif");
         case Format::ICO:
