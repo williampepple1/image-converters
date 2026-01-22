@@ -21,6 +21,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->outputFolderBtn, &QPushButton::clicked, this, &MainWindow::onOutputFolderClicked);
     connect(ui->convertBtn, &QPushButton::clicked, this, &MainWindow::onConvertClicked);
 
+    // Sync quality slider and spinbox
+    connect(ui->qualitySlider, &QSlider::valueChanged, ui->qualitySpinBox, &QSpinBox::setValue);
+    connect(ui->qualitySpinBox, QOverload<int>::of(&QSpinBox::valueChanged), ui->qualitySlider, &QSlider::setValue);
+
     // Connect conversion controller signals
     connect(m_conversionController, &ConversionController::started,
             this, &MainWindow::onConversionStarted);
@@ -117,11 +121,12 @@ void MainWindow::onConvertClicked()
         return;
     }
 
-    // Get target format
+    // Get target format and quality
     ImageConverter::Format targetFormat = ImageConverter::formatFromIndex(ui->formatComboBox->currentIndex());
+    int quality = ui->qualitySpinBox->value();
 
-    // Start conversion
-    m_conversionController->startConversion(m_selectedFiles, m_outputFolder, targetFormat);
+    // Start conversion with quality setting
+    m_conversionController->startConversion(m_selectedFiles, m_outputFolder, targetFormat, quality);
 }
 
 void MainWindow::onConversionStarted()
@@ -258,4 +263,6 @@ void MainWindow::setUIEnabled(bool enabled)
     ui->outputFolderBtn->setEnabled(enabled);
     ui->formatComboBox->setEnabled(enabled);
     ui->fileListWidget->setEnabled(enabled);
+    ui->qualitySlider->setEnabled(enabled);
+    ui->qualitySpinBox->setEnabled(enabled);
 }
