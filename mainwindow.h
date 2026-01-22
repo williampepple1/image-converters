@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QStringList>
+#include "imageconverter.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,9 +29,11 @@ private:
     Ui::MainWindow *ui;
     QStringList m_selectedFiles;
     QString m_outputFolder;
+    ImageConverter *m_converter;
 
     void updateFileList();
     void updateConvertButtonState();
+    void showConversionResults(const QList<ConversionResult>& results);
 };
 
 #endif // MAINWINDOW_H

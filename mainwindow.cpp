@@ -4,10 +4,12 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QFileInfo>
+#include <QApplication>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
+    , m_converter(new ImageConverter(this))
 {
     ui->setupUi(this);
 
@@ -88,11 +90,35 @@ void MainWindow::onConvertClicked()
         return;
     }
 
-    // Placeholder - conversion logic will be implemented in Milestone 2
-    QMessageBox::information(this, "Convert",
-        QString("Ready to convert %1 file(s) to %2\n\nConversion feature coming in next milestone!")
-        .arg(m_selectedFiles.size())
-        .arg(ui->formatComboBox->currentText()));
+    // Disable UI during conversion
+    ui->convertBtn->setEnabled(false);
+    ui->selectFilesBtn->setEnabled(false);
+    ui->statusbar->showMessage("Converting...");
+
+    // Get target format
+    ImageConverter::Format targetFormat = ImageConverter::formatFromIndex(ui->formatComboBox->currentIndex());
+
+    // Perform conversions
+    QList<ConversionResult> results;
+    int total = m_selectedFiles.size();
+
+    for (int i = 0; i < total; ++i) {
+        const QString& file = m_selectedFiles[i];
+        ui->statusbar->showMessage(QString("Converting %1 of %2...").arg(i + 1).arg(total));
+
+        ConversionResult result = m_converter->convert(file, m_outputFolder, targetFormat);
+        results.append(result);
+
+        // Process events to keep UI responsive
+        QApplication::processEvents();
+    }
+
+    // Re-enable UI
+    ui->convertBtn->setEnabled(true);
+    ui->selectFilesBtn->setEnabled(true);
+
+    // Show results
+    showConversionResults(results);
 }
 
 void MainWindow::updateFileList()
@@ -107,4 +133,38 @@ void MainWindow::updateFileList()
 void MainWindow::updateConvertButtonState()
 {
     ui->convertBtn->setEnabled(!m_selectedFiles.isEmpty());
+}
+
+void MainWindow::showConversionResults(const QList<ConversionResult>& results)
+{
+    int successCount = 0;
+    int failCount = 0;
+    QStringList errors;
+
+    for (const ConversionResult& result : results) {
+        if (result.success) {
+            successCount++;
+        } else {
+            failCount++;
+            QFileInfo info(result.inputFile);
+            errors.append(QString("%1: %2").arg(info.fileName(), result.errorMessage));
+        }
+    }
+
+    QString message;
+    if (failCount == 0) {
+        message = QString("Successfully converted %1 file(s)!").arg(successCount);
+        ui->statusbar->showMessage(message);
+        QMessageBox::information(this, "Conversion Complete", message);
+    } else if (successCount == 0) {
+        message = QString("All %1 conversion(s) failed.").arg(failCount);
+        ui->statusbar->showMessage(message);
+        QMessageBox::warning(this, "Conversion Failed",
+            message + "\n\nErrors:\n" + errors.join("\n"));
+    } else {
+        message = QString("Converted %1 file(s), %2 failed.").arg(successCount).arg(failCount);
+        ui->statusbar->showMessage(message);
+        QMessageBox::warning(this, "Conversion Partially Complete",
+            message + "\n\nErrors:\n" + errors.join("\n"));
+    }
 }

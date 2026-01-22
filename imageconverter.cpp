@@ -1,0 +1,163 @@
+#include "imageconverter.h"
+
+#include <QImage>
+#include <QFileInfo>
+#include <QDir>
+#include <QImageReader>
+#include <QPainter>
+
+ImageConverter::ImageConverter(QObject *parent)
+    : QObject(parent)
+{
+}
+
+ConversionResult ImageConverter::convert(const QString& inputPath, const QString& outputFolder, Format targetFormat, int quality)
+{
+    ConversionResult result;
+    result.inputFile = inputPath;
+    result.success = false;
+
+    // Check if input file exists
+    QFileInfo inputInfo(inputPath);
+    if (!inputInfo.exists()) {
+        result.errorMessage = "Input file does not exist";
+        return result;
+    }
+
+    // Load the image
+    QImage image;
+    if (!image.load(inputPath)) {
+        result.errorMessage = "Failed to load image. Format may not be supported.";
+        return result;
+    }
+
+    // Generate output path
+    result.outputFile = generateOutputPath(inputPath, outputFolder, targetFormat);
+
+    // Ensure output directory exists
+    QFileInfo outputInfo(result.outputFile);
+    QDir().mkpath(outputInfo.absolutePath());
+
+    // Determine the format string and quality for saving
+    const char* formatStr = nullptr;
+    int saveQuality = quality;
+
+    switch (targetFormat) {
+        case Format::JPEG:
+            formatStr = "JPEG";
+            if (saveQuality < 0) saveQuality = 90; // Default JPEG quality
+            // Convert to RGB if image has alpha (JPEG doesn't support transparency)
+            if (image.hasAlphaChannel()) {
+                QImage rgbImage(image.size(), QImage::Format_RGB32);
+                rgbImage.fill(Qt::white); // Fill with white background
+                QPainter painter(&rgbImage);
+                painter.drawImage(0, 0, image);
+                painter.end();
+                image = rgbImage;
+            }
+            break;
+        case Format::PNG:
+            formatStr = "PNG";
+            // PNG uses compression level 0-9 (via quality), -1 for default
+            if (saveQuality < 0) saveQuality = -1;
+            break;
+        case Format::GIF:
+            formatStr = "GIF";
+            // GIF requires indexed color
+            if (image.colorCount() == 0 || image.colorCount() > 256) {
+                image = image.convertToFormat(QImage::Format_Indexed8);
+            }
+            break;
+        case Format::BMP:
+            formatStr = "BMP";
+            break;
+        case Format::WebP:
+            formatStr = "WEBP";
+            if (saveQuality < 0) saveQuality = 90;
+            break;
+        case Format::TIFF:
+            formatStr = "TIFF";
+            break;
+        case Format::HEIC:
+            // HEIC requires external plugin - placeholder
+            result.errorMessage = "HEIC output requires additional plugins (coming soon)";
+            return result;
+        case Format::AVIF:
+            // AVIF requires external plugin - placeholder
+            result.errorMessage = "AVIF output requires additional plugins (coming soon)";
+            return result;
+        case Format::ICO:
+            // ICO requires special handling - placeholder
+            result.errorMessage = "ICO output requires special handling (coming soon)";
+            return result;
+    }
+
+    // Save the image
+    bool saved = image.save(result.outputFile, formatStr, saveQuality);
+
+    if (saved) {
+        result.success = true;
+    } else {
+        result.errorMessage = "Failed to save image. Check if format is supported.";
+    }
+
+    return result;
+}
+
+QString ImageConverter::getExtension(Format format)
+{
+    switch (format) {
+        case Format::JPEG: return ".jpg";
+        case Format::PNG: return ".png";
+        case Format::WebP: return ".webp";
+        case Format::GIF: return ".gif";
+        case Format::TIFF: return ".tiff";
+        case Format::BMP: return ".bmp";
+        case Format::HEIC: return ".heic";
+        case Format::AVIF: return ".avif";
+        case Format::ICO: return ".ico";
+    }
+    return ".png"; // Default fallback
+}
+
+ImageConverter::Format ImageConverter::formatFromIndex(int index)
+{
+    switch (index) {
+        case 0: return Format::JPEG;
+        case 1: return Format::PNG;
+        case 2: return Format::WebP;
+        case 3: return Format::GIF;
+        case 4: return Format::TIFF;
+        case 5: return Format::BMP;
+        case 6: return Format::HEIC;
+        case 7: return Format::AVIF;
+        case 8: return Format::ICO;
+        default: return Format::PNG;
+    }
+}
+
+bool ImageConverter::canRead(const QString& filePath)
+{
+    QImageReader reader(filePath);
+    return reader.canRead();
+}
+
+QString ImageConverter::generateOutputPath(const QString& inputPath, const QString& outputFolder, Format targetFormat)
+{
+    QFileInfo inputInfo(inputPath);
+    QString baseName = inputInfo.completeBaseName();
+    QString extension = getExtension(targetFormat);
+
+    QString outputDir = outputFolder.isEmpty() ? inputInfo.absolutePath() : outputFolder;
+
+    QString outputPath = outputDir + "/" + baseName + extension;
+
+    // Handle filename conflicts by adding a number suffix
+    int counter = 1;
+    while (QFileInfo::exists(outputPath) && outputPath != inputPath) {
+        outputPath = outputDir + "/" + baseName + "_" + QString::number(counter) + extension;
+        counter++;
+    }
+
+    return outputPath;
+}
