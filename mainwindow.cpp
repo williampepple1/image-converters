@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QFileInfo>
 #include <QApplication>
+#include <QStandardItemModel>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,7 +22,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Initial state
     updateConvertButtonState();
-    ui->statusbar->showMessage("Ready - Select images to convert");
+    updateFormatAvailability();
+
+    // Show supported formats in status bar
+    QStringList writeFormats = ImageConverter::getSupportedWriteFormats();
+    ui->statusbar->showMessage(QString("Ready - Supported formats: %1").arg(writeFormats.join(", ")));
 }
 
 MainWindow::~MainWindow()
@@ -166,5 +171,48 @@ void MainWindow::showConversionResults(const QList<ConversionResult>& results)
         ui->statusbar->showMessage(message);
         QMessageBox::warning(this, "Conversion Partially Complete",
             message + "\n\nErrors:\n" + errors.join("\n"));
+    }
+}
+
+void MainWindow::updateFormatAvailability()
+{
+    // Update combo box items to show availability
+    struct FormatInfo {
+        ImageConverter::Format format;
+        QString displayName;
+        QString extension;
+    };
+
+    QList<FormatInfo> formats = {
+        {ImageConverter::Format::JPEG, "JPEG", ".jpg"},
+        {ImageConverter::Format::PNG, "PNG", ".png"},
+        {ImageConverter::Format::WebP, "WebP", ".webp"},
+        {ImageConverter::Format::GIF, "GIF", ".gif"},
+        {ImageConverter::Format::TIFF, "TIFF", ".tiff"},
+        {ImageConverter::Format::BMP, "BMP", ".bmp"},
+        {ImageConverter::Format::HEIC, "HEIC", ".heic"},
+        {ImageConverter::Format::AVIF, "AVIF", ".avif"},
+        {ImageConverter::Format::ICO, "ICO", ".ico"}
+    };
+
+    ui->formatComboBox->clear();
+
+    for (const FormatInfo& info : formats) {
+        bool supported = ImageConverter::isFormatSupported(info.format);
+        QString itemText = QString("%1 (%2)%3")
+            .arg(info.displayName)
+            .arg(info.extension)
+            .arg(supported ? "" : " [Not Available]");
+        ui->formatComboBox->addItem(itemText);
+
+        // Disable unsupported formats in the dropdown
+        if (!supported) {
+            int index = ui->formatComboBox->count() - 1;
+            QStandardItemModel* model = qobject_cast<QStandardItemModel*>(ui->formatComboBox->model());
+            if (model) {
+                QStandardItem* item = model->item(index);
+                item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
+            }
+        }
     }
 }

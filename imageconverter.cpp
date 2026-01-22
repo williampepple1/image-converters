@@ -4,6 +4,7 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QImageReader>
+#include <QImageWriter>
 #include <QPainter>
 
 ImageConverter::ImageConverter(QObject *parent)
@@ -140,6 +141,73 @@ bool ImageConverter::canRead(const QString& filePath)
 {
     QImageReader reader(filePath);
     return reader.canRead();
+}
+
+bool ImageConverter::isFormatSupported(Format format)
+{
+    QList<QByteArray> supportedFormats = QImageWriter::supportedImageFormats();
+
+    switch (format) {
+        case Format::JPEG:
+            return supportedFormats.contains("jpg") || supportedFormats.contains("jpeg");
+        case Format::PNG:
+            return supportedFormats.contains("png");
+        case Format::WebP:
+            return supportedFormats.contains("webp");
+        case Format::GIF:
+            return supportedFormats.contains("gif");
+        case Format::TIFF:
+            return supportedFormats.contains("tiff") || supportedFormats.contains("tif");
+        case Format::BMP:
+            return supportedFormats.contains("bmp");
+        case Format::HEIC:
+            return supportedFormats.contains("heic") || supportedFormats.contains("heif");
+        case Format::AVIF:
+            return supportedFormats.contains("avif");
+        case Format::ICO:
+            return supportedFormats.contains("ico");
+    }
+    return false;
+}
+
+QString ImageConverter::getFormatName(Format format)
+{
+    switch (format) {
+        case Format::JPEG: return "JPEG";
+        case Format::PNG: return "PNG";
+        case Format::WebP: return "WebP";
+        case Format::GIF: return "GIF";
+        case Format::TIFF: return "TIFF";
+        case Format::BMP: return "BMP";
+        case Format::HEIC: return "HEIC";
+        case Format::AVIF: return "AVIF";
+        case Format::ICO: return "ICO";
+    }
+    return "Unknown";
+}
+
+QStringList ImageConverter::getSupportedReadFormats()
+{
+    QList<QByteArray> formats = QImageReader::supportedImageFormats();
+    QStringList result;
+    for (const QByteArray& format : formats) {
+        result.append(QString::fromLatin1(format).toUpper());
+    }
+    result.removeDuplicates();
+    result.sort();
+    return result;
+}
+
+QStringList ImageConverter::getSupportedWriteFormats()
+{
+    QList<QByteArray> formats = QImageWriter::supportedImageFormats();
+    QStringList result;
+    for (const QByteArray& format : formats) {
+        result.append(QString::fromLatin1(format).toUpper());
+    }
+    result.removeDuplicates();
+    result.sort();
+    return result;
 }
 
 QString ImageConverter::generateOutputPath(const QString& inputPath, const QString& outputFolder, Format targetFormat)

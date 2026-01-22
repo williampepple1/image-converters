@@ -34,6 +34,7 @@ private:
     void updateFileList();
     void updateConvertButtonState();
     void showConversionResults(const QList<ConversionResult>& results);
+    void updateFormatAvailability();
 };
 
 #endif // MAINWINDOW_H

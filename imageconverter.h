@@ -43,6 +43,18 @@ public:
     // Check if format is supported for reading
     static bool canRead(const QString& filePath);
 
+    // Check if a format is supported for writing
+    static bool isFormatSupported(Format format);
+
+    // Get human-readable format name
+    static QString getFormatName(Format format);
+
+    // Get list of supported read formats
+    static QStringList getSupportedReadFormats();
+
+    // Get list of supported write formats
+    static QStringList getSupportedWriteFormats();
+
 signals:
     void conversionProgress(int current, int total);
     void conversionComplete(const QList<ConversionResult>& results);
