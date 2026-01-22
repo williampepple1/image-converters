@@ -25,6 +25,8 @@ private slots:
     void onClearFilesClicked();
     void onOutputFolderClicked();
     void onConvertClicked();
+    void onFilesDropped(const QStringList& files);
+    void onFileSelectionChanged();
 
     // Conversion progress slots
     void onConversionStarted();

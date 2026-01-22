@@ -1,5 +1,7 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "droparea.h"
+#include "imagepreview.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
@@ -20,6 +22,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->clearFilesBtn, &QPushButton::clicked, this, &MainWindow::onClearFilesClicked);
     connect(ui->outputFolderBtn, &QPushButton::clicked, this, &MainWindow::onOutputFolderClicked);
     connect(ui->convertBtn, &QPushButton::clicked, this, &MainWindow::onConvertClicked);
+
+    // Connect drag-drop signal
+    connect(ui->fileListWidget, &DropArea::filesDropped, this, &MainWindow::onFilesDropped);
+
+    // Connect list selection for preview
+    connect(ui->fileListWidget, &QListWidget::currentRowChanged, this, &MainWindow::onFileSelectionChanged);
 
     // Sync quality slider and spinbox
     connect(ui->qualitySlider, &QSlider::valueChanged, ui->qualitySpinBox, &QSpinBox::setValue);
@@ -88,7 +96,27 @@ void MainWindow::onClearFilesClicked()
     m_selectedFiles.clear();
     updateFileList();
     updateConvertButtonState();
+    ui->imagePreview->clear();
     ui->statusbar->showMessage("File list cleared");
+}
+
+void MainWindow::onFilesDropped(const QStringList& files)
+{
+    m_selectedFiles.append(files);
+    m_selectedFiles.removeDuplicates();
+    updateFileList();
+    updateConvertButtonState();
+    ui->statusbar->showMessage(QString("Added %1 file(s) - Total: %2").arg(files.size()).arg(m_selectedFiles.size()));
+}
+
+void MainWindow::onFileSelectionChanged()
+{
+    int row = ui->fileListWidget->currentRow();
+    if (row >= 0 && row < m_selectedFiles.size()) {
+        ui->imagePreview->setImage(m_selectedFiles[row]);
+    } else {
+        ui->imagePreview->clear();
+    }
 }
 
 void MainWindow::onOutputFolderClicked()

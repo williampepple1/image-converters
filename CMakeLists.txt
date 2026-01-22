@@ -68,6 +68,10 @@ set(PROJECT_SOURCES
         icohandler.h
         conversionworker.cpp
         conversionworker.h
+        droparea.cpp
+        droparea.h
+        imagepreview.cpp
+        imagepreview.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
