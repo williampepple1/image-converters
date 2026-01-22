@@ -33,6 +33,26 @@ else()
     message(STATUS "libheif not found - HEIC/HEIF support disabled")
 endif()
 
+# Optional: Find libavif for AVIF support
+if(PkgConfig_FOUND)
+    pkg_check_modules(LIBAVIF QUIET libavif)
+endif()
+
+# Alternative: Try to find libavif directly
+if(NOT LIBAVIF_FOUND)
+    find_path(LIBAVIF_INCLUDE_DIRS NAMES avif/avif.h)
+    find_library(LIBAVIF_LIBRARIES NAMES avif libavif)
+    if(LIBAVIF_INCLUDE_DIRS AND LIBAVIF_LIBRARIES)
+        set(LIBAVIF_FOUND TRUE)
+    endif()
+endif()
+
+if(LIBAVIF_FOUND)
+    message(STATUS "libavif found - AVIF support enabled")
+else()
+    message(STATUS "libavif not found - AVIF support disabled")
+endif()
+
 set(PROJECT_SOURCES
         main.cpp
         mainwindow.cpp
@@ -42,6 +62,8 @@ set(PROJECT_SOURCES
         imageconverter.h
         heifhandler.cpp
         heifhandler.h
+        avifhandler.cpp
+        avifhandler.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -74,6 +96,13 @@ if(LIBHEIF_FOUND)
     target_include_directories(image-converters PRIVATE ${LIBHEIF_INCLUDE_DIRS})
     target_link_libraries(image-converters PRIVATE ${LIBHEIF_LIBRARIES})
     target_compile_definitions(image-converters PRIVATE HAVE_LIBHEIF)
+endif()
+
+# Link libavif if available
+if(LIBAVIF_FOUND)
+    target_include_directories(image-converters PRIVATE ${LIBAVIF_INCLUDE_DIRS})
+    target_link_libraries(image-converters PRIVATE ${LIBAVIF_LIBRARIES})
+    target_compile_definitions(image-converters PRIVATE HAVE_LIBAVIF)
 endif()
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.

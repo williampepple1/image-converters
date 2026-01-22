@@ -1,5 +1,6 @@
 #include "imageconverter.h"
 #include "heifhandler.h"
+#include "avifhandler.h"
 
 #include <QImage>
 #include <QFileInfo>
@@ -41,7 +42,20 @@ ConversionResult ImageConverter::convert(const QString& inputPath, const QString
                 return result;
             }
         }
-    } else if (!image.load(inputPath)) {
+    }
+    // Check if input is AVIF
+    else if (inputSuffix == "avif") {
+        QString avifError;
+        if (!AvifHandler::read(inputPath, image, avifError)) {
+            // Try Qt's native loading as fallback (in case of Qt plugin)
+            if (!image.load(inputPath)) {
+                result.errorMessage = avifError.isEmpty() ?
+                    "Failed to load AVIF image" : avifError;
+                return result;
+            }
+        }
+    }
+    else if (!image.load(inputPath)) {
         result.errorMessage = "Failed to load image. Format may not be supported.";
         return result;
     }
@@ -108,9 +122,17 @@ ConversionResult ImageConverter::convert(const QString& inputPath, const QString
                 return result;
             }
         case Format::AVIF:
-            // AVIF requires external plugin - placeholder
-            result.errorMessage = "AVIF output requires additional plugins (coming soon)";
-            return result;
+            {
+                // Use AvifHandler for AVIF output
+                int avifQuality = (saveQuality < 0) ? 80 : saveQuality;
+                QString avifError;
+                if (AvifHandler::write(result.outputFile, image, avifQuality, avifError)) {
+                    result.success = true;
+                } else {
+                    result.errorMessage = avifError;
+                }
+                return result;
+            }
         case Format::ICO:
             // ICO requires special handling - placeholder
             result.errorMessage = "ICO output requires special handling (coming soon)";
@@ -188,7 +210,8 @@ bool ImageConverter::isFormatSupported(Format format)
             return HeifHandler::isAvailable() ||
                    supportedFormats.contains("heic") || supportedFormats.contains("heif");
         case Format::AVIF:
-            return supportedFormats.contains("avif");
+            return AvifHandler::isAvailable() ||
+                   supportedFormats.contains("avif");
         case Format::ICO:
             return supportedFormats.contains("ico");
     }
