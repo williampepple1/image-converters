@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QStringList>
 #include "imageconverter.h"
+#include "conversionworker.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -25,16 +26,25 @@ private slots:
     void onOutputFolderClicked();
     void onConvertClicked();
 
+    // Conversion progress slots
+    void onConversionStarted();
+    void onConversionProgress(int current, int total, const QString& currentFile);
+    void onConversionFileCompleted(const ConversionResult& result);
+    void onConversionFinished(const QList<ConversionResult>& results);
+    void onConversionError(const QString& message);
+
 private:
     Ui::MainWindow *ui;
     QStringList m_selectedFiles;
     QString m_outputFolder;
     ImageConverter *m_converter;
+    ConversionController *m_conversionController;
 
     void updateFileList();
     void updateConvertButtonState();
     void showConversionResults(const QList<ConversionResult>& results);
     void updateFormatAvailability();
+    void setUIEnabled(bool enabled);
 };
 
 #endif // MAINWINDOW_H

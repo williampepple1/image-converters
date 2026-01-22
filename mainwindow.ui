@@ -141,6 +141,20 @@ QGroupBox::title {
     subcontrol-origin: margin;
     left: 15px;
     padding: 0 5px;
+}
+
+QProgressBar {
+    background-color: #313244;
+    border: 2px solid #45475a;
+    border-radius: 6px;
+    text-align: center;
+    color: #cdd6f4;
+    font-weight: bold;
+}
+
+QProgressBar::chunk {
+    background-color: #89b4fa;
+    border-radius: 4px;
 }</string>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -367,6 +381,22 @@ QGroupBox::title {
        </size>
       </property>
      </spacer>
+    </item>
+    <item>
+     <widget class="QProgressBar" name="progressBar">
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>25</height>
+       </size>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="visible">
+       <bool>false</bool>
+      </property>
+     </widget>
     </item>
     <item>
      <widget class="QPushButton" name="convertBtn">

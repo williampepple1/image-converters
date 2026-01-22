@@ -11,16 +11,30 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_converter(new ImageConverter(this))
+    , m_conversionController(new ConversionController(this))
 {
     ui->setupUi(this);
 
-    // Connect signals
+    // Connect UI signals
     connect(ui->selectFilesBtn, &QPushButton::clicked, this, &MainWindow::onSelectFilesClicked);
     connect(ui->clearFilesBtn, &QPushButton::clicked, this, &MainWindow::onClearFilesClicked);
     connect(ui->outputFolderBtn, &QPushButton::clicked, this, &MainWindow::onOutputFolderClicked);
     connect(ui->convertBtn, &QPushButton::clicked, this, &MainWindow::onConvertClicked);
 
+    // Connect conversion controller signals
+    connect(m_conversionController, &ConversionController::started,
+            this, &MainWindow::onConversionStarted);
+    connect(m_conversionController, &ConversionController::progress,
+            this, &MainWindow::onConversionProgress);
+    connect(m_conversionController, &ConversionController::fileCompleted,
+            this, &MainWindow::onConversionFileCompleted);
+    connect(m_conversionController, &ConversionController::finished,
+            this, &MainWindow::onConversionFinished);
+    connect(m_conversionController, &ConversionController::error,
+            this, &MainWindow::onConversionError);
+
     // Initial state
+    ui->progressBar->setVisible(false);
     updateConvertButtonState();
     updateFormatAvailability();
 
@@ -95,35 +109,55 @@ void MainWindow::onConvertClicked()
         return;
     }
 
-    // Disable UI during conversion
-    ui->convertBtn->setEnabled(false);
-    ui->selectFilesBtn->setEnabled(false);
-    ui->statusbar->showMessage("Converting...");
+    if (m_conversionController->isRunning()) {
+        // Cancel conversion
+        m_conversionController->cancelConversion();
+        ui->convertBtn->setText("Cancelling...");
+        ui->convertBtn->setEnabled(false);
+        return;
+    }
 
     // Get target format
     ImageConverter::Format targetFormat = ImageConverter::formatFromIndex(ui->formatComboBox->currentIndex());
 
-    // Perform conversions
-    QList<ConversionResult> results;
-    int total = m_selectedFiles.size();
+    // Start conversion
+    m_conversionController->startConversion(m_selectedFiles, m_outputFolder, targetFormat);
+}
 
-    for (int i = 0; i < total; ++i) {
-        const QString& file = m_selectedFiles[i];
-        ui->statusbar->showMessage(QString("Converting %1 of %2...").arg(i + 1).arg(total));
-
-        ConversionResult result = m_converter->convert(file, m_outputFolder, targetFormat);
-        results.append(result);
-
-        // Process events to keep UI responsive
-        QApplication::processEvents();
-    }
-
-    // Re-enable UI
+void MainWindow::onConversionStarted()
+{
+    setUIEnabled(false);
+    ui->progressBar->setVisible(true);
+    ui->progressBar->setValue(0);
+    ui->convertBtn->setText("Cancel");
     ui->convertBtn->setEnabled(true);
-    ui->selectFilesBtn->setEnabled(true);
+    ui->statusbar->showMessage("Starting conversion...");
+}
 
-    // Show results
+void MainWindow::onConversionProgress(int current, int total, const QString& currentFile)
+{
+    int percentage = (current * 100) / total;
+    ui->progressBar->setValue(percentage);
+    ui->statusbar->showMessage(QString("Converting %1 of %2: %3").arg(current).arg(total).arg(currentFile));
+}
+
+void MainWindow::onConversionFileCompleted(const ConversionResult& result)
+{
+    Q_UNUSED(result);
+    // Could update list widget to show status per file
+}
+
+void MainWindow::onConversionFinished(const QList<ConversionResult>& results)
+{
+    setUIEnabled(true);
+    ui->progressBar->setVisible(false);
+    ui->convertBtn->setText("Convert Images");
     showConversionResults(results);
+}
+
+void MainWindow::onConversionError(const QString& message)
+{
+    ui->statusbar->showMessage("Error: " + message);
 }
 
 void MainWindow::updateFileList()
@@ -215,4 +249,13 @@ void MainWindow::updateFormatAvailability()
             }
         }
     }
+}
+
+void MainWindow::setUIEnabled(bool enabled)
+{
+    ui->selectFilesBtn->setEnabled(enabled);
+    ui->clearFilesBtn->setEnabled(enabled);
+    ui->outputFolderBtn->setEnabled(enabled);
+    ui->formatComboBox->setEnabled(enabled);
+    ui->fileListWidget->setEnabled(enabled);
 }
