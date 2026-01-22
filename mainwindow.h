@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QStringList>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -17,7 +18,19 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void onSelectFilesClicked();
+    void onClearFilesClicked();
+    void onOutputFolderClicked();
+    void onConvertClicked();
+
 private:
     Ui::MainWindow *ui;
+    QStringList m_selectedFiles;
+    QString m_outputFolder;
+
+    void updateFileList();
+    void updateConvertButtonState();
 };
+
 #endif // MAINWINDOW_H

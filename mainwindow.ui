@@ -6,23 +6,385 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>700</width>
+    <height>500</height>
    </rect>
   </property>
-  <property name="windowTitle">
-   <string>MainWindow</string>
+  <property name="minimumSize">
+   <size>
+    <width>600</width>
+    <height>400</height>
+   </size>
   </property>
-  <widget class="QWidget" name="centralwidget"/>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>25</height>
-    </rect>
-   </property>
+  <property name="windowTitle">
+   <string>Image Converter</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">QMainWindow {
+    background-color: #1e1e2e;
+}
+
+QLabel {
+    color: #cdd6f4;
+}
+
+QPushButton {
+    background-color: #89b4fa;
+    color: #1e1e2e;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+QPushButton:hover {
+    background-color: #b4befe;
+}
+
+QPushButton:pressed {
+    background-color: #74c7ec;
+}
+
+QPushButton:disabled {
+    background-color: #45475a;
+    color: #6c7086;
+}
+
+QComboBox {
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 2px solid #45475a;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    min-width: 150px;
+}
+
+QComboBox:hover {
+    border-color: #89b4fa;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 30px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 8px solid #cdd6f4;
+    margin-right: 10px;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #313244;
+    color: #cdd6f4;
+    selection-background-color: #89b4fa;
+    selection-color: #1e1e2e;
+    border: 2px solid #45475a;
+    border-radius: 6px;
+}
+
+QLineEdit {
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 2px solid #45475a;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+QLineEdit:focus {
+    border-color: #89b4fa;
+}
+
+QListWidget {
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 2px solid #45475a;
+    border-radius: 6px;
+    padding: 5px;
+    font-size: 12px;
+}
+
+QListWidget::item {
+    padding: 8px;
+    border-radius: 4px;
+}
+
+QListWidget::item:selected {
+    background-color: #89b4fa;
+    color: #1e1e2e;
+}
+
+QListWidget::item:hover {
+    background-color: #45475a;
+}
+
+QStatusBar {
+    background-color: #181825;
+    color: #a6adc8;
+}
+
+QGroupBox {
+    color: #cdd6f4;
+    font-weight: bold;
+    border: 2px solid #45475a;
+    border-radius: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 15px;
+    padding: 0 5px;
+}</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <property name="leftMargin">
+     <number>20</number>
+    </property>
+    <property name="topMargin">
+     <number>20</number>
+    </property>
+    <property name="rightMargin">
+     <number>20</number>
+    </property>
+    <property name="bottomMargin">
+     <number>20</number>
+    </property>
+    <item>
+     <widget class="QLabel" name="titleLabel">
+      <property name="text">
+       <string>Image Converter</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font-size: 28px; font-weight: bold; color: #89b4fa; margin-bottom: 10px;</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="subtitleLabel">
+      <property name="text">
+       <string>Convert images between JPEG, PNG, WebP, GIF, TIFF, BMP, HEIC, AVIF, and ICO formats</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font-size: 12px; color: #a6adc8; margin-bottom: 20px;</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="inputGroupBox">
+      <property name="title">
+       <string>Input Files</string>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QHBoxLayout" name="fileSelectLayout">
+         <item>
+          <widget class="QPushButton" name="selectFilesBtn">
+           <property name="text">
+            <string>Select Files...</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>40</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="clearFilesBtn">
+           <property name="text">
+            <string>Clear All</string>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>100</width>
+             <height>40</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: #f38ba8;</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QListWidget" name="fileListWidget">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>120</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="outputGroupBox">
+      <property name="title">
+       <string>Output Settings</string>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <widget class="QLabel" name="formatLabel">
+         <property name="text">
+          <string>Convert to:</string>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">font-size: 14px;</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="formatComboBox">
+         <item>
+          <property name="text">
+           <string>JPEG (.jpg)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PNG (.png)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>WebP (.webp)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>GIF (.gif)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>TIFF (.tiff)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>BMP (.bmp)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>HEIC (.heic)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AVIF (.avif)</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>ICO (.ico)</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="outputFolderBtn">
+         <property name="text">
+          <string>Output Folder...</string>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>130</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: #a6e3a1;</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QLabel" name="outputPathLabel">
+      <property name="text">
+       <string>Output: Same folder as input</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">color: #a6adc8; font-size: 11px; padding-left: 5px;</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>20</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item>
+     <widget class="QPushButton" name="convertBtn">
+      <property name="text">
+       <string>Convert Images</string>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>50</height>
+       </size>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font-size: 16px;</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
